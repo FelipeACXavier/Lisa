@@ -8,3 +8,12 @@ O plano é criar também uma interface gráfica para dar suporte entre lisa e gl
 glisa --> lisa --> C
 ``````
 
+## Exemplos
+
+```
+func principal() {
+  imprimir("Bom dia mundo");
+  
+  retorno 0;
+}
+```
