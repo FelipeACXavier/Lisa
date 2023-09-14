@@ -4,22 +4,20 @@ include(GNUInstallDirs)
 
 include(CMakePrintHelpers)
 
-# add_library(${PROJECT_NAME}
-#   STATIC
-#     parser.cpp
-# )
-
+file(GLOB LEXER "lexer/*.cpp")
 file(GLOB PARSER "parser/*.cpp")
 
-cmake_print_variables(SOURCES)
+cmake_print_variables(LEXER)
+cmake_print_variables(PARSER)
 cmake_print_variables(PROJECT_NAME)
 
-add_executable(${PROJECT_NAME} ${PROJECT_NAME}.cpp ${PARSER})
+add_executable(${PROJECT_NAME} ${PROJECT_NAME}.cpp ${LEXER} ${PARSER})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
 target_include_directories(${PROJECT_NAME}
  PUBLIC
+  lexer
   parser
 )
 
