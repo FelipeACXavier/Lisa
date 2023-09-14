@@ -1,0 +1,14 @@
+{
+  "clangd.fallbackFlags": [
+    "-I${workspaceFolder}/source",
+    "-I${workspaceFolder}/source/parser",
+    "-I${workspaceFolder}/source/interpreter",
+
+    // Libraries
+    "-I${workspaceFolder}/CppHelpers/file_system",
+    "-I${workspaceFolder}/CppHelpers/logging",
+    "-I${workspaceFolder}/CppHelpers/result",
+    "-I${workspaceFolder}/CppHelpers/safe_types",
+    "-I${workspaceFolder}/CppHelpers/string",
+  ]
+}
