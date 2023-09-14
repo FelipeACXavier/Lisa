@@ -1,21 +1,30 @@
+#include "lexer.h"
 #include "logging.h"
 #include "parser.h"
 #include "result.h"
 
+#include <chrono>
 #include <memory>
 
 int main()
 {
-  std::unique_ptr<lisa::Parser> parser = std::make_unique<lisa::Parser>();
+  std::unique_ptr<lisa::Lexer> lexer = std::make_unique<lisa::Lexer>();
 
-  LOG_ERROR_ON_FAILURE(parser->Parse(R"(
-  func soma(a, b) {
-    retorno a + b;
+  auto start = std::chrono::high_resolution_clock::now();
+  auto ret = lexer->Parse("/home/felaze/Projects/Lisa/test/base.lisa");
+  auto end = std::chrono::high_resolution_clock::now();
+
+  double timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+  LOG_INFO("Time taken to lex: %.2lf us", timeTaken);
+
+  if (!ret.IsSuccess())
+  {
+    LOG_ERROR(ret.ErrorMessage());
+    return -1;
   }
 
-  func inicial(a, b) {
-    retorno 0;
-  })"));
+  for (const auto& token : ret.Value())
+    LOG_INFO("%-12s %-10s |%s|", token.Name().c_str(), token.Loc().c_str(), token.Value().c_str());
 
   return 0;
 }

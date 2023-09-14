@@ -4,7 +4,11 @@
 #include "parser.h"
 #include "result.h"
 #include "tokens.h"
+
+#include <algorithm>
+#include <cctype>
 #include <cstdint>
+#include <memory>
 
 
 namespace lisa
@@ -18,44 +22,40 @@ VoidResult Parser::Parse(const std::string &contents)
   // Save so contents can be accessed from all functions
   mContents = contents;
 
+  // Start at index 0
+  return Parse(0);
+}
+
+Result<uint32_t> Parser::Parse(uint32_t index)
+{
+  uint32_t i = index;
   std::string token = "";
-  for (uint32_t i = 0; i < mContents.size(); ++i)
+  for (; i < mContents.size(); ++i)
   {
-    const char c = mContents.at(i);
-    LOG_DEBUG("%c - 0x%x", c, c);
-    switch (c)
+    char c = mContents.at(i);
+    while (std::isalnum(c))
     {
-      case Tokens::CURLY_LEFT:
-      case Tokens::CURLY_RIGHT:
-        break;
-      case Tokens::PAR_LEFT:
-      case Tokens::PAR_RIGHT:
-        break;
-      case Tokens::COMMA:
-      case Tokens::SEMI_COLON:
-        break;
-      case Tokens::SPACE:
-      case Tokens::NEW_LINE:
-      case Tokens::TAB:
-      {
-        auto index = ParseToken(i, token);
-        RETURN_ON_FAILURE(index);
-        i = index.Value();
-        token.clear();
-        break;
-      }
-      default:
-        token += c;
+      token += c;
+      c = mContents.at(++i);
     }
+
+    auto index = ParseToken(i, token);
+    RETURN_ON_FAILURE(index);
+    i = index.Value();
+
+    LOG_INFO(token);
+    token.clear();
   }
 
-  return VoidResult();
+  return i;
 }
 
 Result<uint32_t> Parser::ParseToken(uint32_t index, const std::string& token)
 {
   if (token.empty())
     return index;
+
+  LOG_INFO(token);
 
   Result<uint32_t> ret = Result<uint32_t>::Failed("Unknown type");
   if (token == Tokens::FUNCTION)
@@ -71,21 +71,29 @@ Result<uint32_t> Parser::ParseFunction(uint32_t index)
 
   Funcao function;
 
-  for (; i < mContents.size(); ++i)
+  bool run = true;
+  for (; i < mContents.size() && run; ++i)
   {
     const char c = mContents.at(i);
     switch (c)
     {
       case Tokens::CURLY_LEFT:
+      {
+
+        std::shared_ptr<Bloco> bloco = std::make_shared<Bloco>();
+        auto ret = Parse(i);
+        if (!ret.IsSuccess())
+          return ret;
+
+        i = ret.Value();
+
+        function.block = bloco;
         break;
-      case Tokens::CURLY_RIGHT:
-        return i;
+      }
       case Tokens::PAR_LEFT:
       {
-        LOG_INFO("Function name: %s", token.c_str());
-
-        Palavra name;
-        name.value = token;
+        std::shared_ptr<Palavra> name = std::make_shared<Palavra>();
+        name->value = token;
         function.name = name;
 
         token.clear();
@@ -94,20 +102,22 @@ Result<uint32_t> Parser::ParseFunction(uint32_t index)
       case Tokens::COMMA:
       case Tokens::PAR_RIGHT:
       {
-        LOG_INFO("Function argument: %s", token.c_str());
-
-        Palavra arg;
-        arg.value = token;
+        std::shared_ptr<Palavra> arg = std::make_shared<Palavra>();
+        arg->value = token;
         function.arguments.push_back(arg);
 
         token.clear();
         break;
       }
       case Tokens::SEMI_COLON:
+      case Tokens::CURLY_RIGHT:
+      {
+        run = false;
         break;
-      case Tokens::SPACE:
-      case Tokens::NEW_LINE:
+      }
       case Tokens::TAB:
+      case Tokens::NEW_LINE:
+      case Tokens::SPACE:
         break;
       default:
         token += c;
@@ -116,6 +126,8 @@ Result<uint32_t> Parser::ParseFunction(uint32_t index)
   }
 
   mAst.mFunctions.push_back(function);
+
+  // mAst.Print();
 
   return i - 1;
 }

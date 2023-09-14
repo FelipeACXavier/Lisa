@@ -18,5 +18,6 @@ static const char COMMA  = ',';
 static const char SEMI_COLON  = ';';
 
 static const std::string FUNCTION  = "func";
+static const std::string RETURN = "retorno";
 }
 }
