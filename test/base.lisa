@@ -1,0 +1,11 @@
+// Isso é uma função que retorna a soma de dois números
+func soma(a, b) {
+  retorno a + b;
+}
+
+// Essa é a principal função do programa, o ponto de início
+func inicial(a, b) {
+  a = 2;
+  b = a.2;
+  retorno 0;
+}
